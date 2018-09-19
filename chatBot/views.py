@@ -13,7 +13,7 @@ def get_response(request):
     if request.method == 'GET':
         # http://127.0.0.1:8000/answer?q=*****
         value = request.GET.get('q')
-        seq = nlp_presses.get_intent(value)
+        seq = nlp_presses.re_to_api(value)
         if value != '':
             answer_dict['code'] = 1
             answer_dict['content'] = seq
