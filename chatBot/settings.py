@@ -120,6 +120,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (
-     os.path.join(BASE_DIR, 'data').replace('\\', '/'),
+     os.path.join(BASE_DIR, 'static'),
+    "/Users/zjxu/Documents/CMCC/chatBot/static/"
 )
 

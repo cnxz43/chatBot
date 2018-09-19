@@ -1,19 +1,22 @@
 # -*- coding:utf-8 -*-
 
 import jieba
-
-
+import os
+import xlrd
+project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+print(project_dir)
 # # 添加自定义词
 # jieba.add_word(word, freq=None, tag=None)
 # # 添加自定义词典
-jieba.load_userdict("/data/city_dict")
-jieba.load_userdict("/data/bussiness_dict")
-jieba.load_userdict("/data/fault_dict")
+jieba.load_userdict(project_dir + "/static/city_dict")
+jieba.load_userdict(project_dir + "/static/bussiness_dict")
+jieba.load_userdict(project_dir + "/static/fault_dict")
 # 添加建议词
 # jieba.suggest_freq(('今天','天气'), True)
 
 
-import xlrd
+
+
 from collections import Counter
 # def  general_dict(filename = '../data/test.xls', sheetname = 'standard_format'):
 #     '''
@@ -57,13 +60,15 @@ from collections import Counter
 #             if fau != '':
 #                 f3.write(fau + " fault\n")
 
-def  search_xls_file(key_dict, filename = '/data/test.xls', sheetname = 'standard_format'):
-    xls_file = xlrd.open_workbook(filename)
+def  search_xls_file(key_dict, filename = '/static/test.xls', sheetname = 'standard_format'):
+    xls_file = xlrd.open_workbook(project_dir + filename)
     xls_sheet = xls_file.sheet_by_name(sheetname)
     # key_dict{"city":[],"bus":[],"fau":[]} city:第10列  bus:第21列 fau:第22列
     city_index = []
     if key_dict['city'] == []:
-        key_dict['city'] = ['沧州市','石家庄市','保定市','唐山市','秦皇岛市','邯郸市','衡水市','张家口市','雄安新区','廊坊市','承德市','邢台市']
+        # key_dict['city'] = ['沧州市','石家庄市','保定市','唐山市','秦皇岛市','邯郸市','衡水市','张家口市','雄安新区','廊坊市','承德市','邢台市']
+        result = "city not include"
+        return result
     city_list = xls_sheet.col_values(10)
     for i in range(len(city_list)):
         if city_list[i] in key_dict["city"]:
@@ -82,15 +87,19 @@ def  search_xls_file(key_dict, filename = '/data/test.xls', sheetname = 'standar
 
 
     value_col = [0,1,4,9,10,11,15,16,21,23,24]
-    city_index.insert(0,0)
+    value_col = [0,9,10,11,23,31]
+
+
     result = []
     for row in city_index:
+        row_dict = {}
         row_value = xls_sheet.row_values(row)
         row_val = ''
         for ind in value_col:
-            row_val += "\t"+row_value[ind]
+            row_dict[xls_sheet.row_values(0)[ind]] = row_value[ind].strip()
+            # row_val += " "+row_value[ind].strip()
         # print(row_val)
-        result.append(row_val)
+        result.append(row_dict)
 
     return result
 
@@ -169,7 +178,7 @@ def re_to_api(seq):
 
 if __name__=="__main__":
     seq = input("输入句子：")
-    # 沧州市的网络覆盖类问题有哪些
+    # 沧州市的网络覆盖类LTE数据问题有哪些
 
 
     # # print(cut_seq(seq))
