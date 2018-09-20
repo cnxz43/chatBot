@@ -176,6 +176,37 @@ def re_to_api(seq):
     result = search_xls_file(key_dict)
     return result
 
+
+
+# url 调用方法
+def connect_api():
+    from urllib import request, parse, error
+    import json
+    import string
+    import sys
+    import pprint
+
+    print ('start connect...')
+    try:
+        ip_address = sys.argv[1]
+    except:
+        ip_address = "localhost"
+    api = "http://{localhost}:8000/answer?q=".format(localhost = ip_address)
+    seq = input("输入句子：")
+    # 沧州市的网络覆盖类LTE数据问题有哪些
+    url = api + seq
+    url = parse.quote(url, safe=string.printable)
+    print("url:", url)
+
+
+    try:
+        content = request.urlopen(url)
+        data = json.loads(content.read())
+        print("-------url result:---------")
+        pprint.pprint(data)
+    except error.HTTPError as e:
+        print(e)
+
 if __name__=="__main__":
     seq = input("输入句子：")
     # 沧州市的网络覆盖类LTE数据问题有哪些
