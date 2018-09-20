@@ -130,7 +130,7 @@ def analysis_intent(seq):
 
     intent = 'other_domain'
     for w in seq:
-        print(w)
+        # print(w)
         if w in IT_words:
             intent = 'IT_domain'
         elif w in time_words:
@@ -203,7 +203,10 @@ def connect_api():
         content = request.urlopen(url)
         data = json.loads(content.read())
         print("-------url result:---------")
-        pprint.pprint(data)
+        # pprint.pprint(data)
+        if data['code'] == 1:
+            for line in data['content']:
+                print(line)
     except error.HTTPError as e:
         print(e)
 
