@@ -3,6 +3,14 @@
 import jieba
 import os
 import xlrd
+
+
+from urllib import request, parse, error
+import json
+import string
+import sys
+
+
 project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 print(project_dir)
 # # 添加自定义词
@@ -180,10 +188,7 @@ def re_to_api(seq):
 
 # url 调用方法
 def connect_api():
-    from urllib import request, parse, error
-    import json
-    import string
-    import sys
+
     import pprint
 
     print ('start connect...')
