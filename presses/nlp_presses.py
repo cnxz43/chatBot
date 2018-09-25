@@ -22,7 +22,8 @@ jieba.load_userdict(project_dir + "/static/fault_dict")
 # 添加建议词
 # jieba.suggest_freq(('今天','天气'), True)
 
-
+xls_file = xlrd.open_workbook(project_dir + '/static/test.xls')
+xls_sheet = xls_file.sheet_by_name('standard_format')
 
 
 from collections import Counter
@@ -69,8 +70,8 @@ from collections import Counter
 #                 f3.write(fau + " fault\n")
 
 def  search_xls_file(key_dict, filename = '/static/test.xls', sheetname = 'standard_format'):
-    xls_file = xlrd.open_workbook(project_dir + filename)
-    xls_sheet = xls_file.sheet_by_name(sheetname)
+    # xls_file = xlrd.open_workbook(project_dir + filename)
+    # xls_sheet = xls_file.sheet_by_name(sheetname)
     # key_dict{"city":[],"bus":[],"fau":[]} city:第10列  bus:第21列 fau:第22列
     city_index = []
     if key_dict['bus'] ==[] and key_dict['fau'] == []:
