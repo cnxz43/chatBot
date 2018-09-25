@@ -73,13 +73,17 @@ def  search_xls_file(key_dict, filename = '/static/test.xls', sheetname = 'stand
     # xls_file = xlrd.open_workbook(project_dir + filename)
     # xls_sheet = xls_file.sheet_by_name(sheetname)
     # key_dict{"city":[],"bus":[],"fau":[]} city:第10列  bus:第21列 fau:第22列
+    print(key_dict)
     city_index = []
     if key_dict['bus'] ==[] and key_dict['fau'] == []:
         return ''
     elif key_dict['city'] == [] and (key_dict['bus'] !=[] or key_dict['fau'] != []):
-        # key_dict['city'] = ['沧州市','石家庄市','保定市','唐山市','秦皇岛市','邯郸市','衡水市','张家口市','雄安新区','廊坊市','承德市','邢台市']
-        result = "请输入城市"
-        return result
+        if 'ns' in key_dict['pos']:
+            result = "没有该城市的数据"
+            return result
+        else:
+            key_dict['city'] = ['沧州市','石家庄市','保定市','唐山市','秦皇岛市','邯郸市','衡水市','张家口市','雄安新区','廊坊市','承德市','邢台市']
+
     city_list = xls_sheet.col_values(10)
     for i in range(len(city_list)):
         if city_list[i] in key_dict["city"]:
@@ -143,7 +147,7 @@ def get_intent(seq):
     seg_list, pos_list = cut_seq(seq)
     # print(pos_list)
     intent = analysis_intent(seg_list)
-    key_dict = {"city": [], "bus": [], "fau": []}
+    key_dict = {"city": [], "bus": [], "fau": [],"pos":[]}
     for pos in pos_list:
         if pos[1] == 'city':
             key_dict['city'].append(pos[0])
@@ -151,6 +155,7 @@ def get_intent(seq):
             key_dict['bus'].append(pos[0])
         elif pos[1] == 'fault':
             key_dict['fau'].append(pos[0])
+        key_dict['pos'].append(pos[1])
     return intent, key_dict
 
 def analysis_intent(seq):
@@ -246,8 +251,8 @@ if __name__=="__main__":
 
 
     # # # print(cut_seq(seq))
-    # # seg_list, pos_list = cut_seq(seq)
-    # # print(pos_list)
+    seg_list, pos_list = cut_seq(seq)
+    print(pos_list)
     # # analysis_intent(seg_list)
     #
     # # print(get_intent(seq))
