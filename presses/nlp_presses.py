@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 
 import jieba
+import jieba.posseg as pseg
 import os
 import xlrd
 
@@ -13,6 +14,8 @@ import sys
 
 project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 print(project_dir)
+
+
 # # 添加自定义词
 # jieba.add_word(word, freq=None, tag=None)
 # # 添加自定义词典
@@ -22,8 +25,21 @@ jieba.load_userdict(project_dir + "/static/fault_dict")
 # 添加建议词
 # jieba.suggest_freq(('今天','天气'), True)
 
+# 加载数据
 xls_file = xlrd.open_workbook(project_dir + '/static/test.xls')
 xls_sheet = xls_file.sheet_by_name('standard_format')
+
+# 加载同义词
+file_dir = project_dir + "/static/Synonyms_dict.txt"
+Syn_list = []
+with open(file_dir,encoding='utf-8') as f1:
+    for line in f1.readlines():
+        Syn_words = line.strip().split()
+        Syn_list.append(Syn_words)
+
+        # 将同义词加入分词词典
+        for word in Syn_words:
+            jieba.add_word(word)
 
 
 from collections import Counter
@@ -201,17 +217,28 @@ def cut_seq(seq):
     seg_list = []
     words = jieba.cut(seq)  # 默认是精确模式
     for word in words:
+        for Syn in Syn_list:
+            if word in Syn:
+                word = Syn[0]
+                # print(word, Syn)
         seg_list.append(word)
 
-    import jieba.posseg as pseg
+
     words = pseg.cut(seq)
     pos_list = []
     for word, flag in words:
+        for Syn in Syn_list:
+            if word in Syn:
+                word = Syn[0]
+                flag = 'city'
+                print(word, Syn)
         pos_list.append([word,flag])
     return seg_list, pos_list
 
 def re_to_api(seq):
+    print("seq",seq)
     intent, key_dict = get_intent(seq)
+    print("key_dict",key_dict)
     result = search_xls_file(key_dict)
     return result
 
@@ -240,8 +267,9 @@ def connect_api(seq):
         print("-------url result:---------")
         # pprint.pprint(data)
         if data['code'] == 1:
-            for line in data['content']:
-                print(line)
+            # for line in data['content']:
+            #     print(line)
+            print(data['content'])
     except error.HTTPError as e:
         print(e)
 
@@ -261,3 +289,5 @@ if __name__=="__main__":
     # search_xls_file(key_dict)
 
     connect_api(seq)
+
+    # print(Syn_list)
