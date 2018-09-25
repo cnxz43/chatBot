@@ -77,7 +77,7 @@ def  search_xls_file(key_dict, filename = '/static/test.xls', sheetname = 'stand
         return ''
     elif key_dict['city'] == [] and (key_dict['bus'] !=[] or key_dict['fau'] != []):
         # key_dict['city'] = ['沧州市','石家庄市','保定市','唐山市','秦皇岛市','邯郸市','衡水市','张家口市','雄安新区','廊坊市','承德市','邢台市']
-        result = "city not include"
+        result = "请输入城市"
         return result
     city_list = xls_sheet.col_values(10)
     for i in range(len(city_list)):
