@@ -15,8 +15,13 @@ def get_response(request):
         value = request.GET.get('q')
         seq = nlp_presses.re_to_api(value)
         if value != '':
-            answer_dict['code'] = 1
-            answer_dict['content'] = seq
+            if seq == '':
+                answer_dict['code'] = 0
+                answer_dict['content'] = 'no answer!'
+            else:
+                answer_dict['code'] = 1
+                answer_dict['content'] = seq
+
         else:
             answer_dict['code'] = 0
             answer_dict['content'] = "failed"

@@ -73,7 +73,9 @@ def  search_xls_file(key_dict, filename = '/static/test.xls', sheetname = 'stand
     xls_sheet = xls_file.sheet_by_name(sheetname)
     # key_dict{"city":[],"bus":[],"fau":[]} city:第10列  bus:第21列 fau:第22列
     city_index = []
-    if key_dict['city'] == []:
+    if key_dict['bus'] ==[] and key_dict['fau'] == []:
+        return ''
+    elif key_dict['city'] == [] and (key_dict['bus'] !=[] or key_dict['fau'] != []):
         # key_dict['city'] = ['沧州市','石家庄市','保定市','唐山市','秦皇岛市','邯郸市','衡水市','张家口市','雄安新区','廊坊市','承德市','邢台市']
         result = "city not include"
         return result
@@ -108,8 +110,31 @@ def  search_xls_file(key_dict, filename = '/static/test.xls', sheetname = 'stand
             # row_val += " "+row_value[ind].strip()
         # print(row_val)
         result.append(row_dict)
-
-    return result
+    try:
+        re = result[1]
+        '''
+        "条目ID": "WK_NETOPTIMIZE-15369168961959509",
+        "问题点名称（弱覆盖名称）": "孟村县新县镇王帽圈村",
+        "所属地市": "沧州市",
+        "所属区县": "孟村回族自治县",
+        "故障现象详细描述": "主被叫困难，上网慢",
+        "解决延后原因": "
+        '''
+        re_sent = "问题的条目ID:{id}," \
+                  "问题点名称（弱覆盖名称）:{name}," \
+                  "所属地市:{city}," \
+                  "所属区县:{dec}," \
+                  "故障现象详细描述:{desc}," \
+                  "解决延后原因:{reason}".format(id=re["条目ID"],
+                                           name=re["问题点名称（弱覆盖名称）"],
+                                           city=re["所属地市"],
+                                           dec = re["所属区县"],
+                                           desc = re["故障现象详细描述"],
+                                           reason = re["解决延后原因"])
+    except:
+        re = 'not found!'
+        re_sent = ''
+    return re_sent
 
 
 
@@ -187,7 +212,7 @@ def re_to_api(seq):
 
 
 # url 调用方法
-def connect_api():
+def connect_api(seq):
 
     import pprint
 
@@ -197,7 +222,6 @@ def connect_api():
     except:
         ip_address = "localhost"
     api = "http://{localhost}:8000/answer?q=".format(localhost = ip_address)
-    seq = input("输入句子：")
     # 沧州市的网络覆盖类LTE数据问题有哪些
     url = api + seq
     url = parse.quote(url, safe=string.printable)
@@ -220,12 +244,14 @@ if __name__=="__main__":
     # 沧州市的网络覆盖类LTE数据问题有哪些
 
 
-    # # print(cut_seq(seq))
-    # seg_list, pos_list = cut_seq(seq)
-    # print(pos_list)
-    # analysis_intent(seg_list)
+    # # # print(cut_seq(seq))
+    # # seg_list, pos_list = cut_seq(seq)
+    # # print(pos_list)
+    # # analysis_intent(seg_list)
+    #
+    # # print(get_intent(seq))
+    # intent, key_dict = get_intent(seq)
+    #
+    # search_xls_file(key_dict)
 
-    # print(get_intent(seq))
-    intent, key_dict = get_intent(seq)
-
-    search_xls_file(key_dict)
+    connect_api(seq)
