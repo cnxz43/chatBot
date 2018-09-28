@@ -41,6 +41,8 @@ with open(file_dir,encoding='utf-8') as f1:
         for word in Syn_words:
             jieba.add_word(word)
 
+get_name_api_word_list = ["起名", "网名", "想个名字", "起个名字"]
+
 
 from collections import Counter
 # def  general_dict(filename = '../data/test.xls', sheetname = 'standard_format'):
@@ -235,11 +237,27 @@ def cut_seq(seq):
         pos_list.append([word,flag])
     return seg_list, pos_list
 
+def search_nickname(seq):
+    name = ''
+    for word in get_name_api_word_list:
+        if word in seq:
+            try:
+                content = request.urlopen("https://www.apiopen.top/femaleNameApi?page=0")
+                data = json.loads(content.read())
+                name = data['data'][0]['femalename']
+                return name
+            except:
+                name = ''
+    return name
+
 def re_to_api(seq):
     print("seq",seq)
     intent, key_dict = get_intent(seq)
     print("key_dict",key_dict)
     result = search_xls_file(key_dict)
+    if result == '':
+        result = search_nickname(seq)
+    print("$$$", result)
     return result
 
 
@@ -288,6 +306,7 @@ if __name__=="__main__":
     #
     # search_xls_file(key_dict)
 
+    # print("%%%",re_to_api(seq))
     connect_api(seq)
 
     # print(Syn_list)
