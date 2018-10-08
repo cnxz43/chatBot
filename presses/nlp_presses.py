@@ -10,7 +10,8 @@ from urllib import request, parse, error
 import json
 import string
 import sys
-
+import re
+from presses import cennect_redis
 
 project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 print(project_dir)
@@ -22,6 +23,7 @@ print(project_dir)
 jieba.load_userdict(project_dir + "/static/city_dict")
 jieba.load_userdict(project_dir + "/static/bussiness_dict")
 jieba.load_userdict(project_dir + "/static/fault_dict")
+jieba.load_userdict(project_dir + "/static/uncut_dict")
 # 添加建议词
 # jieba.suggest_freq(('今天','天气'), True)
 
@@ -88,6 +90,7 @@ from collections import Counter
 #                 f3.write(fau + " fault\n")
 
 def  search_xls_file(key_dict, filename = '/static/test.xls', sheetname = 'standard_format'):
+    print("---search_xls_file---")
     # xls_file = xlrd.open_workbook(project_dir + filename)
     # xls_sheet = xls_file.sheet_by_name(sheetname)
     # key_dict{"city":[],"bus":[],"fau":[]} city:第10列  bus:第21列 fau:第22列
@@ -162,6 +165,7 @@ def  search_xls_file(key_dict, filename = '/static/test.xls', sheetname = 'stand
 
 
 def get_intent(seq):
+    print("---get_intent---")
     seg_list, pos_list = cut_seq(seq)
     # print(pos_list)
     intent = analysis_intent(seg_list)
@@ -174,25 +178,27 @@ def get_intent(seq):
         elif pos[1] == 'fault':
             key_dict['fau'].append(pos[0])
         key_dict['pos'].append(pos[1])
-    return intent, key_dict
+    return intent, seg_list, key_dict
 
-def analysis_intent(seq):
-    # intent: IT技术， 天气， 时间， 闲聊
-    houduan = ['分布式服务', '服务端组件', '分布式数据访问', '基础组件', '基础控件', '页面引擎', '横切关注']
-    fenbushi_server = ['远程调用', '协议集成', '集群监控', '动态部署', '服务治理']
-    fuwuduanzujian = ['分布式文件系统', '分布式缓存系统', '分布式计算']
-    IT_words = houduan + fenbushi_server + fuwuduanzujian
-    weather_words = ['天气','温度']
-    time_words = ['时间', '点钟']
+def analysis_intent(seg_list):
+    print("---analysis_intent---")
+    # # intent: IT技术， 天气， 时间， 闲聊
+    # houduan = ['分布式服务', '服务端组件', '分布式数据访问', '基础组件', '基础控件', '页面引擎', '横切关注']
+    # fenbushi_server = ['远程调用', '协议集成', '集群监控', '动态部署', '服务治理']
+    # fuwuduanzujian = ['分布式文件系统', '分布式缓存系统', '分布式计算']
+    # IT_words = houduan + fenbushi_server + fuwuduanzujian
+    # weather_words = ['天气','温度']
+    # time_words = ['时间', '点钟']
+    kv_os_intent = ['magic储存','magic查询']
 
     intent = 'other_domain'
-    for w in seq:
-        # print(w)
-        if w in IT_words:
-            intent = 'IT_domain'
-        elif w in time_words:
-            intent = 'time_domain'
-    # print(intent)
+    for w in seg_list:
+        print(w)
+        if w in kv_os_intent:
+            intent = 'redis_domain'
+        # elif w in time_words:
+        #     intent = 'time_domain'
+    print(intent)
     return intent
 
 def combos_intent(seq):
@@ -216,6 +222,7 @@ def cut_seq(seq):
     :param seq:
     :return:
     '''
+    print("---cut_seq---")
     seg_list = []
     words = jieba.cut(seq)  # 默认是精确模式
     for word in words:
@@ -238,6 +245,7 @@ def cut_seq(seq):
     return seg_list, pos_list
 
 def search_nickname(seq):
+    print("---search_nickname---")
     name = ''
     for word in get_name_api_word_list:
         if word in seq:
@@ -250,14 +258,62 @@ def search_nickname(seq):
                 name = ''
     return name
 
+
+def save_redis(seq):
+    print("---save_to_redis---")
+    # '存储 "算法：SVM"，还有 "姓名：许志娟" 结束''
+    # print(seq)
+    seq_ = seq.replace(":","：")
+    kv_dict = {}
+    pattern = re.compile('"(.*?)"') #非贪婪
+    print(pattern.findall(seq_))
+    print(pattern.search(seq_))
+    for kv_item in pattern.findall(seq_):
+        # print(kv_item.split('：', 1))
+        kv_dict[kv_item.split('：', 1)[0]] = kv_item.split('：', 1)[1]
+    print(kv_dict)
+    result = cennect_redis.save_to_redis(kv_dict)
+    return result
+
+def search_redis(seq):
+    print("---search_redis---")
+    res = ''
+    pattern = re.compile('"(.*?)"')
+    for key in pattern.findall(seq):
+        print(key)
+        result = cennect_redis.get_from_redis(key)
+        if result == None:
+            res += " " + (key + ":查询的关键词不存在！")
+        else:
+            res += " " + (key + ":" + result)
+    return res
+
+
+
+def go_to_redis(seq, seg_list):
+    print("---go_to_redis---")
+    # kv_os_intent = ['帮我储存', '帮我查询']
+    result = ''
+    for w in seg_list:
+        if w == 'magic储存':
+            result = save_redis(seq)
+        elif w == 'magic查询':
+            result = search_redis(seq)
+    return result
+
+# views.py调用函数
 def re_to_api(seq):
+    print("---re_to_api---")
     print("seq",seq)
-    intent, key_dict = get_intent(seq)
-    print("key_dict",key_dict)
-    result = search_xls_file(key_dict)
-    if result == '':
-        result = search_nickname(seq)
-    print("$$$", result)
+    intent, seg_list, key_dict = get_intent(seq)
+    print("intent, key_dict",intent, key_dict)
+    if intent == "redis_domain":
+        result = go_to_redis(seq, seg_list)
+    else:
+        result = search_xls_file(key_dict)
+        if result == '':
+            result = search_nickname(seq)
+    # print("$$$", result)
     return result
 
 
@@ -276,7 +332,7 @@ def connect_api(seq):
     # 沧州市的网络覆盖类LTE数据问题有哪些
     url = api + seq
     url = parse.quote(url, safe=string.printable)
-    print("url:", url)
+    # print("url:", url)
 
 
     try:
@@ -292,21 +348,22 @@ def connect_api(seq):
         print(e)
 
 if __name__=="__main__":
+
     seq = input("输入句子：")
     # 沧州市的网络覆盖类LTE数据问题有哪些
+    # magic储存"今天天气：晴"还有"昨天天气：多云"   magic查询"今天天气"
 
 
-    # # # print(cut_seq(seq))
-    seg_list, pos_list = cut_seq(seq)
-    print(pos_list)
-    # # analysis_intent(seg_list)
-    #
+
     # # print(get_intent(seq))
     # intent, key_dict = get_intent(seq)
     #
     # search_xls_file(key_dict)
 
     # print("%%%",re_to_api(seq))
-    connect_api(seq)
+    while seq != "q!":
+        connect_api(seq)
+        seq = input("输入句子：")
 
     # print(Syn_list)
+

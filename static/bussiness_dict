@@ -1,4 +1,4 @@
-GSM话音和数据 bus
-LTE话音和数据 bus
-TD话音和数据 bus
-LTE数据 bus
+GSM话音和数据 20000 bus
+LTE话音和数据 20000 bus
+TD话音和数据 20000 bus
+LTE数据 20000 bus
