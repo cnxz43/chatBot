@@ -189,7 +189,7 @@ def analysis_intent(seg_list):
     # IT_words = houduan + fenbushi_server + fuwuduanzujian
     # weather_words = ['天气','温度']
     # time_words = ['时间', '点钟']
-    kv_os_intent = ['magic储存','magic查询']
+    kv_os_intent = ['PUT','GET']
 
     intent = 'other_domain'
     for w in seg_list:
@@ -278,15 +278,18 @@ def save_redis(seq):
 def search_redis(seq):
     print("---search_redis---")
     res = ''
-    pattern = re.compile('"(.*?)"')
-    for key in pattern.findall(seq):
+    # pattern = re.compile('"(.*?)"')
+    # for key in pattern.findall(seq):
+    seq_list = seq.split()[1:]
+    print(seq_list)
+    for key in seq_list:
         print(key)
         result = cennect_redis.get_from_redis(key)
         if result == None:
             res += " " + (key + ":查询的关键词不存在！")
         else:
             res += " " + (key + ":" + result)
-    return res
+    return res.strip()
 
 
 
@@ -294,11 +297,14 @@ def go_to_redis(seq, seg_list):
     print("---go_to_redis---")
     # kv_os_intent = ['帮我储存', '帮我查询']
     result = ''
-    for w in seg_list:
-        if w == 'magic储存':
-            result = save_redis(seq)
-        elif w == 'magic查询':
-            result = search_redis(seq)
+    if seq.split()[0] == 'GET':
+        result = search_redis(seq)
+    else:
+        for w in seg_list:
+            if w == 'PUT':
+                result = save_redis(seq)
+            # elif w == 'GET':
+            #     result = search_redis(seq)
     return result
 
 # views.py调用函数
@@ -320,7 +326,7 @@ def re_to_api(seq):
 
 # url 调用方法
 def connect_api(seq):
-
+    print("---connect_api---")
     import pprint
 
     print ('start connect...')
@@ -330,8 +336,11 @@ def connect_api(seq):
         ip_address = "localhost"
     api = "http://{localhost}:8000/answer?q=".format(localhost = ip_address)
     # 沧州市的网络覆盖类LTE数据问题有哪些
-    url = api + seq
-    url = parse.quote(url, safe=string.printable)
+
+
+    encode_seq = parse.quote(seq, safe=string.printable)
+    url = api + encode_seq
+    print("api+seq", url)
     # print("url:", url)
 
 
