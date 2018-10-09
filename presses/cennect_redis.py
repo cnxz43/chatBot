@@ -17,7 +17,10 @@ def save_to_redis(kv_dict):
 def get_from_redis(key):
     print("---get_from_redis---")
     r = redis.StrictRedis(host='localhost', port=6379, db=0)
-    value = r.get(key).decode()
+    try:
+        value = r.get(key).decode()
+    except:
+        value = r.get(key)
     # print ("#",r.get(key).decode(),value)   #获取
     # key不存在会返回 None
     return value
