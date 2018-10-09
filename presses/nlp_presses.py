@@ -263,14 +263,16 @@ def save_redis(seq):
     print("---save_to_redis---")
     # '存储 "算法：SVM"，还有 "姓名：许志娟" 结束''
     # print(seq)
-    seq_ = seq.replace(":","：")
+    # seq_ = seq.replace("：",":")
     kv_dict = {}
     pattern = re.compile('"(.*?)"') #非贪婪
-    print(pattern.findall(seq_))
-    print(pattern.search(seq_))
-    for kv_item in pattern.findall(seq_):
+    print(pattern.findall(seq))
+    print(pattern.search(seq))
+    for kv_item in pattern.findall(seq):
         # print(kv_item.split('：', 1))
-        kv_dict[kv_item.split('：', 1)[0]] = kv_item.split('：', 1)[1]
+        temp_item = kv_item.replace("：",":")
+        temp_key = temp_item.split(':', 1)[0]
+        kv_dict[temp_key] = kv_item[len(temp_key)+1:]#kv_item.split(':', 1)[1]
     print(kv_dict)
     result = cennect_redis.save_to_redis(kv_dict)
     return result
@@ -369,9 +371,10 @@ if __name__=="__main__":
     #
     # search_xls_file(key_dict)
 
-    # print("%%%",re_to_api(seq))
+
     while seq != "q!":
-        connect_api(seq)
+        # connect_api(seq)
+        print("%%%",re_to_api(seq))
         seq = input("输入句子：")
 
     # print(Syn_list)
