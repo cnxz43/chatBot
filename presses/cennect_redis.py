@@ -25,6 +25,22 @@ def get_from_redis(key):
     # key不存在会返回 None
     return value
 
+def publish_timed_task(now, time_span, value):
+    try:
+        if time_span >= 0:
+            conn = redis.StrictRedis()
+            key = str(now)
+            key_expire = str(now) + '_e'
+            conn.set(key, value)
+            conn.set(key_expire, 'expire')
+            conn.expire(key_expire,time_span)
+            # conn.get(key)
+            return "设定定时任务成功！"
+        else:
+            return "发布定时任务失败,定时任务发生在过去！"
+    except:
+        return "发布定时任务失败!"
+
 if __name__=="__main__":
     kv_dict = {'今天天气':'晴'}
     print(save_to_redis(kv_dict))

@@ -13,14 +13,15 @@ def get_response(request):
     if request.method == 'GET':
         # http://127.0.0.1:8000/answer?q=*****
         value = request.GET.get('q')
-        seq = nlp_presses.re_to_api(value)
+        seq_dict = nlp_presses.re_to_api(value)
         if value != '':
-            if seq == '':
-                answer_dict['code'] = 0
-                answer_dict['content'] = 'no answer!'
-            else:
-                answer_dict['code'] = 1
-                answer_dict['content'] = seq
+            answer_dict = seq_dict
+            # if seq_dict['code'] != 1:
+            #     answer_dict['code'] = 0
+            #     answer_dict['content'] = 'no answer!'
+            # else:
+            #     answer_dict['code'] = 1
+            #     answer_dict['content'] = seq
 
         else:
             answer_dict['code'] = 0

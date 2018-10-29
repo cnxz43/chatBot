@@ -4,6 +4,7 @@ import jieba
 import jieba.posseg as pseg
 import os
 import xlrd
+import time
 
 
 from urllib import request, parse, error
@@ -178,6 +179,7 @@ def get_intent(seq):
         elif pos[1] == 'fault':
             key_dict['fau'].append(pos[0])
         key_dict['pos'].append(pos[1])
+    print(intent)
     return intent, seg_list, key_dict
 
 def analysis_intent(seg_list):
@@ -189,13 +191,24 @@ def analysis_intent(seg_list):
     # IT_words = houduan + fenbushi_server + fuwuduanzujian
     # weather_words = ['天气','温度']
     # time_words = ['时间', '点钟']
+
+    # key value存取redis
     kv_os_intent = ['PUT','GET']
+
+    # 定时任务
+    timed_task_intent = ['AT']
+
+
 
     intent = 'other_domain'
     for w in seg_list:
-        print(w)
+        # print(w)
+
+        # key value存取redis
         if w in kv_os_intent:
             intent = 'redis_domain'
+        elif w in timed_task_intent:
+            intent = 'timed_domain'
         # elif w in time_words:
         #     intent = 'time_domain'
     print(intent)
@@ -242,6 +255,7 @@ def cut_seq(seq):
                 flag = 'city'
                 print(word, Syn)
         pos_list.append([word,flag])
+    print(seg_list, pos_list)
     return seg_list, pos_list
 
 def search_nickname(seq):
@@ -294,7 +308,6 @@ def search_redis(seq):
     return res.strip()
 
 
-
 def go_to_redis(seq, seg_list):
     print("---go_to_redis---")
     # kv_os_intent = ['帮我储存', '帮我查询']
@@ -309,20 +322,62 @@ def go_to_redis(seq, seg_list):
             #     result = search_redis(seq)
     return result
 
+
+def go_to_timedtask(seq, seg_list):
+    print("---go_to_timedtask---")
+    # seq: "AT 17:59 通知：请各位立刻去813开会"
+    # result = {'value': '', 'time': '17:49'}
+    '''
+    将seq处理成标准格式，切分出value和time, 存入redis
+    '''
+    split_seq = seq.split(' ', 2)
+    print("split_seq",split_seq)
+    sent_time = split_seq[1]
+    sent_time= sent_time.replace("：", ":")
+    value = split_seq[2]
+    now = time.time()
+    now_local = time.localtime()
+    publish_localtime = str(now_local.tm_year) + "-" + str(now_local.tm_mon) + "-" + str(now_local.tm_mday) + " " + sent_time
+    #print(publish_localtime)
+
+    # 转换成时间数组
+    timeArray = time.strptime(publish_localtime, "%Y-%m-%d %H:%M")
+    #print(now,"|", now_local.tm_year,"|" ,timeArray )
+
+    # 转换成时间戳
+    timestamp = time.mktime(timeArray)
+
+    time_span = timestamp-now
+    time_span = int(time_span)
+
+    result = cennect_redis.publish_timed_task(now, time_span, value)
+    print(value)
+
+    return result
+
 # views.py调用函数
 def re_to_api(seq):
     print("---re_to_api---")
     print("seq",seq)
+    code = 0
     intent, seg_list, key_dict = get_intent(seq)
     print("intent, key_dict",intent, key_dict)
     if intent == "redis_domain":
+        code = 1
         result = go_to_redis(seq, seg_list)
+    elif intent == "timed_domain":
+        code = 2
+        #result = {'value':'','time':'2018-10-24 17:49:50'}
+        result = go_to_timedtask(seq, seg_list)
     else:
+        code = 1
         result = search_xls_file(key_dict)
         if result == '':
             result = search_nickname(seq)
     # print("$$$", result)
-    return result
+
+    result_dict = {'code':code, 'content':result, 'sentence':seq}
+    return result_dict
 
 
 
