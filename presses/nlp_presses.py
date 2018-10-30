@@ -366,7 +366,7 @@ def re_to_api(seq):
         code = 1
         result = go_to_redis(seq, seg_list)
     elif intent == "timed_domain":
-        code = 2
+        code = 1
         #result = {'value':'','time':'2018-10-24 17:49:50'}
         result = go_to_timedtask(seq, seg_list)
     else:
