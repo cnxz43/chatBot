@@ -370,10 +370,13 @@ def re_to_api(seq):
         #result = {'value':'','time':'2018-10-24 17:49:50'}
         result = go_to_timedtask(seq, seg_list)
     else:
-        code = 1
         result = search_xls_file(key_dict)
         if result == '':
             result = search_nickname(seq)
+    if result != '':
+        code = 1
+    else:
+        code = 0
     # print("$$$", result)
 
     result_dict = {'code':code, 'content':result, 'sentence':seq}
