@@ -330,7 +330,8 @@ def go_to_timedtask(seq, seg_list):
     '''
     将seq处理成标准格式，切分出value和time, 存入redis
     '''
-    split_seq = seq.split(' ', 2)
+    split_seq = seq.strip()
+    split_seq = split_seq.split(' ', 2)
     print("split_seq",split_seq)
     sent_time = split_seq[1]
     sent_time= sent_time.replace("：", ":")
