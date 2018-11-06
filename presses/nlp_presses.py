@@ -12,7 +12,7 @@ import json
 import string
 import sys
 import re
-from presses import cennect_redis
+from presses import cennect_redis, spider
 
 project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 print(project_dir)
@@ -169,7 +169,7 @@ def get_intent(seq):
     print("---get_intent---")
     seg_list, pos_list = cut_seq(seq)
     # print(pos_list)
-    intent = analysis_intent(seg_list)
+    intent = analysis_intent(seq, seg_list)
     key_dict = {"city": [], "bus": [], "fau": [],"pos":[]}
     for pos in pos_list:
         if pos[1] == 'city':
@@ -182,15 +182,8 @@ def get_intent(seq):
     print(intent)
     return intent, seg_list, key_dict
 
-def analysis_intent(seg_list):
+def analysis_intent(seq, seg_list):
     print("---analysis_intent---")
-    # # intent: IT技术， 天气， 时间， 闲聊
-    # houduan = ['分布式服务', '服务端组件', '分布式数据访问', '基础组件', '基础控件', '页面引擎', '横切关注']
-    # fenbushi_server = ['远程调用', '协议集成', '集群监控', '动态部署', '服务治理']
-    # fuwuduanzujian = ['分布式文件系统', '分布式缓存系统', '分布式计算']
-    # IT_words = houduan + fenbushi_server + fuwuduanzujian
-    # weather_words = ['天气','温度']
-    # time_words = ['时间', '点钟']
 
     # key value存取redis
     kv_os_intent = ['PUT','GET']
@@ -198,36 +191,28 @@ def analysis_intent(seg_list):
     # 定时任务
     timed_task_intent = ['AT']
 
+    # 舆情 1.更新舆情 2.获取网易排行 3.获取微博排行
+    toprank_intent = ['更新排行榜', '网易新闻排行', '微博热搜排行']
 
 
     intent = 'other_domain'
-    for w in seg_list:
-        # print(w)
+    if seq in toprank_intent:
+        intent = 'toprank_domain'
+    else:
+        for w in seg_list:
+            # print(w)
 
-        # key value存取redis
-        if w in kv_os_intent:
-            intent = 'redis_domain'
-        elif w in timed_task_intent:
-            intent = 'timed_domain'
-        # elif w in time_words:
-        #     intent = 'time_domain'
+            # key value存取redis
+            if w in kv_os_intent:
+                intent = 'redis_domain'
+            elif w in timed_task_intent:
+                intent = 'timed_domain'
+            # elif w in time_words:
+            #     intent = 'time_domain'
     print(intent)
     return intent
 
-def combos_intent(seq):
-    # intent: IT技术， 天气， 时间， 闲聊
-    combos = ['4G飞享套餐', '全球通无限尊享套餐', '任我用全国不限量套餐']
 
-
-    intent = 'other_domain'
-    for w in seq:
-        print(w)
-        if w in IT_words:
-            intent = 'IT_domain'
-        elif w in time_words:
-            intent = 'time_domain'
-    # print(intent)
-    return intent
 
 def cut_seq(seq):
     '''
@@ -330,8 +315,8 @@ def go_to_timedtask(seq, seg_list):
     '''
     将seq处理成标准格式，切分出value和time, 存入redis
     '''
-    split_seq = seq.strip()
-    split_seq = split_seq.split(' ', 2)
+    # split_seq = seq.strip()
+    split_seq = seq.split(' ', 2)
     print("split_seq",split_seq)
     sent_time = split_seq[1]
     sent_time= sent_time.replace("：", ":")
@@ -356,9 +341,25 @@ def go_to_timedtask(seq, seg_list):
 
     return result
 
+def go_to_spider(seq):
+    print("---go_to_spider---")
+    update_toprank_intent = ['更新排行榜']
+    get_neteaserank_intent = ['网易新闻排行']
+    get_sinarank_intent = ['微博热搜排行']
+    if seq in update_toprank_intent:
+        result = spider.update_data()
+    elif seq in get_neteaserank_intent:
+        result = spider.read_netease_file()
+    elif seq in get_sinarank_intent:
+        result = spider.read_sina_file()
+    else:
+        result = "获取排行榜失败！"
+    return result
+
 # views.py调用函数
-def re_to_api(seq):
+def re_to_api(nature_seq):
     print("---re_to_api---")
+    seq = nature_seq.strip()
     print("seq",seq)
     code = 0
     intent, seg_list, key_dict = get_intent(seq)
@@ -370,6 +371,9 @@ def re_to_api(seq):
         code = 1
         #result = {'value':'','time':'2018-10-24 17:49:50'}
         result = go_to_timedtask(seq, seg_list)
+    elif intent == 'toprank_domain':
+        code = 1
+        result = go_to_spider(seq)
     else:
         result = search_xls_file(key_dict)
         if result == '':
@@ -380,7 +384,7 @@ def re_to_api(seq):
         code = 0
     # print("$$$", result)
 
-    result_dict = {'code':code, 'content':result, 'sentence':seq}
+    result_dict = {'code':code, 'content':result, 'sentence':nature_seq}
     return result_dict
 
 
