@@ -78,7 +78,7 @@ def read_netease_file():
         for line in f.readlines():
             # print(line.strip())
             top_list.append(line.strip())
-    return top_list
+    return top_list[:5]
 
 def read_sina_file():
     print("---read_sina_file---")
@@ -88,7 +88,7 @@ def read_sina_file():
         for line in f.readlines():
             # print(line.strip())
             top_list.append(line.strip())
-    return top_list
+    return top_list[:5]
 
 def update_data():
     print("---update_data---")
