@@ -4,8 +4,12 @@ import requests
 import re
 from lxml import etree
 project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-print(project_dir)
+# print(project_dir)
 save_path = project_dir + "/static/top_news/"
+
+
+
+
 
 def StringListSave(filename, slist):
     print("---StringListSave---")
@@ -15,7 +19,8 @@ def StringListSave(filename, slist):
     with open(path, "w+") as fp:
         for s in slist:
             # print("s",s)
-            fp.write("%s\t\t%s\n" % (s[0], s[1]))
+            # fp.write("%s\t\t%s\n" % (s[0], s[1]))
+            fp.write("%s\n" % s[0])
 
 def Page_Info(myPage):
     print("---Page_Info---")
@@ -37,7 +42,7 @@ def netease_Spider():
     print("---netease_Spider---")
     i = 0
     url = "http://news.163.com/rank/"
-    print ("downloading ", url)
+    # print ("downloading ", url)
     myPage = requests.get(url).content.decode("gbk")
     # myPage = urllib2.urlopen(url).read().decode("gbk")
     myPageResults = Page_Info(myPage)
@@ -45,7 +50,7 @@ def netease_Spider():
     StringListSave(filename, myPageResults)
     i += 1
     for item, url in myPageResults:
-        print ("downloading ", url)
+        # print ("downloading ", url)
         new_page = requests.get(url).content.decode("gbk")
         # new_page = urllib2.urlopen(url).read().decode("gbk")
         newPageResults = New_Page_Info(new_page)
@@ -57,7 +62,7 @@ def sina_Spider():
     print("---sina_Spider---")
     i = 0
     url = "https://s.weibo.com/top/summary?Refer=top_hot"
-    print ("downloading ", url)
+    # print ("downloading ", url)
     myPage = requests.get(url).content #.decode("gbk")
     # myPage = urllib2.urlopen(url).read().decode("gbk")
     myPageResults = New_Page_Info(myPage)
