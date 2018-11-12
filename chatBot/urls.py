@@ -22,16 +22,15 @@ urlpatterns = [
     url(r'^answer$', views.get_response, name='answer'),
 ]
 
-from apscheduler.schedulers.background import BackgroundScheduler
-from presses import spider,cennect_redis
-
-
-sched = BackgroundScheduler()
 
 # @sched.interval_schedule(seconds=60)
-@sched.scheduled_job(trigger='interval', seconds=60)
+
+from apscheduler.schedulers.background import BackgroundScheduler
+from presses import spider,cennect_redis
+sched = BackgroundScheduler()
+
+@sched.scheduled_job(trigger='interval', seconds=3600)
 def my_task():
-    # print("tttttttttttteeeeeeeeesssssssssssstttttttt")
     print(spider.update_data())
     print(cennect_redis.publish_alarm())
 sched.start()

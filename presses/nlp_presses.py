@@ -419,8 +419,11 @@ def re_to_api(nature_seq):
     seq = nature_seq.strip()
     print("seq",seq)
     code = 0
+
+    # 判断意图及分词
     intent, seg_list, key_dict = get_intent(seq)
     print("intent, key_dict",intent, key_dict)
+
     if intent == "redis_domain":
         code = 1
         result = go_to_redis(seq, seg_list)
@@ -442,7 +445,6 @@ def re_to_api(nature_seq):
         code = 1
     else:
         code = 0
-    # print("$$$", result)
 
     result_dict = {'code':code, 'content':result, 'sentence':nature_seq}
     return result_dict

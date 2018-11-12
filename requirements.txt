@@ -1,5 +1,8 @@
-jieba==0.39
-xlrd==1.1.0
-Django==2.0.3
-redis==2.10.6
 py2neo==3.1.2
+redis==2.10.6
+xlrd==1.1.0
+requests==2.19.1
+APScheduler==3.5.3
+lxml==4.2.5
+jieba==0.39
+Django==2.0.3

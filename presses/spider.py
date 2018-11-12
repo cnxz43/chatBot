@@ -142,13 +142,13 @@ def weather_alarm(city):
     result = json.loads(r.content.decode('utf-8'))
     # pprint.pprint(result)
     try:
-        city = result['Result']['City']['cn']
+        # city = result['Result']['City']['cn']
         alarm = result['Result']['Weathernow']['Warning']
         time = result['Result']['UpdateTime']
         date = result['Result']['Date']
         print("alarm", city, date, time, alarm)
         # alarm_dict = {'city':city, 'alarm':alarm, 'time':time, 'date':date}
-        alarm_str = city + ' ' + str(date) + ' ' + str(time) + ' ' + str(alarm) + '\n'
+        alarm_str = city + ' ' + str(date) + ' ' + str(time) + ' ' + str(alarm)
 
     except:
         alarm_str = '请求天气预警信息失败！'
