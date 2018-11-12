@@ -29,7 +29,7 @@ from presses import spider,cennect_redis
 sched = BackgroundScheduler()
 
 # @sched.interval_schedule(seconds=60)
-@sched.scheduled_job(trigger='interval', seconds=3600)
+@sched.scheduled_job(trigger='interval', seconds=60)
 def my_task():
     # print("tttttttttttteeeeeeeeesssssssssssstttttttt")
     print(spider.update_data())

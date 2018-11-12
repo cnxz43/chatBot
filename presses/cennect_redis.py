@@ -51,7 +51,7 @@ def publish_alarm():
                                 password='123456')
     conn = redis.StrictRedis(connection_pool=pool)
     # conn = redis.StrictRedis()
-    conn.publish('weather-alarm',message)
+    conn.publish('mychannel',message)
     return ('发布天气预警！')
 
 if __name__=="__main__":
