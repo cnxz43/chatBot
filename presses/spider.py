@@ -3,6 +3,9 @@ import os
 import requests
 import re
 from lxml import etree
+from urllib import parse
+import string
+import json
 project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # print(project_dir)
 save_path = project_dir + "/static/top_news/"
@@ -111,6 +114,45 @@ def update_data():
         result += "\t更新新浪热搜排行失败!"
     return result
 
+
+
+def read_alarm(city_list):
+    result = []
+    for city in city_list:
+        result.append(weather_alarm(city))
+    if result == []:
+        result= ('获取灾害信息失败！')
+    else:
+        result = str(result)
+    return result
+
+import pprint
+# //点睛数据:实时天气预报,使用Python方式调用接口简单示例
+def weather_alarm(city):
+    print("---weather_alarm---")
+    # print(city)
+    # api.djapi.cn/rtweather/get?citycode=101280601&cityname_ch=深圳&cityname_py=shenzhen&ip=192.168.1.1&jwd=114.064632|22.555933&token=XXXXXX&datatype=json
+    url = "https://api.djapi.cn/rtweather/get?cityname_ch={city}&token=dda2228da3e8147604283b3d132a8676&datatype=json".format(
+        city=city)
+    url = parse.quote(url, safe=string.printable)
+    r = requests.get(url=url)
+    # print('url', url)
+    # print("数据返回如下：")
+    # print(r.text)
+    result = json.loads(r.content.decode('utf-8'))
+    # pprint.pprint(result)
+    try:
+        city = result['Result']['City']['cn']
+        alarm = result['Result']['Weathernow']['Warning']
+        time = result['Result']['UpdateTime']
+        date = result['Result']['Date']
+        print("alarm", city, date, time, alarm)
+        # alarm_dict = {'city':city, 'alarm':alarm, 'time':time, 'date':date}
+        alarm_str = city + ' ' + str(date) + ' ' + str(time) + ' ' + str(alarm) + '\n'
+
+    except:
+        alarm_str = '请求天气预警信息失败！'
+    return alarm_str
 
 if __name__ == '__main__':
     print ("start")

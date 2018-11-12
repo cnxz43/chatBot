@@ -31,14 +31,3 @@ def get_response(request):
 
     return HttpResponse(json.dumps(answer_dict))
 
-
-from apscheduler.schedulers.blocking import BlockingScheduler
-from presses import spider
-
-def aps_spider():
-    # print (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '你好')
-    print(spider.update_data())
-
-scheduler = BlockingScheduler()
-scheduler.add_job(func=aps_spider, trigger='interval', seconds=3600)
-scheduler.start()

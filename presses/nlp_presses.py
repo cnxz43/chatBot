@@ -32,6 +32,9 @@ jieba.load_userdict(project_dir + "/static/uncut_dict")
 xls_file = xlrd.open_workbook(project_dir + '/static/test.xls')
 xls_sheet = xls_file.sheet_by_name('standard_format')
 
+jiake_file = xlrd.open_workbook(project_dir + '/static/test.xls')
+jiake_sheet = xls_file.sheet_by_name('jiake')
+
 # 加载同义词
 file_dir = project_dir + "/static/Synonyms_dict.txt"
 Syn_list = []
@@ -39,12 +42,16 @@ with open(file_dir,encoding='utf-8') as f1:
     for line in f1.readlines():
         Syn_words = line.strip().split()
         Syn_list.append(Syn_words)
-
         # 将同义词加入分词词典
         for word in Syn_words:
             jieba.add_word(word)
 
 get_name_api_word_list = ["起名", "网名", "想个名字", "起个名字"]
+city_list = ['沧州市', '石家庄市', '保定市', '唐山市', '秦皇岛市', '邯郸市', '衡水市', '张家口市', '雄安新区', '廊坊市', '承德市', '邢台市']
+jiake_ecodes = ['KT001', 'KT003', 'KT005', 'KT006', '10000', '10001', '10010',
+                '1305', '40002', '1302', 'KT007', 'KT011', 'KT016',
+                '账户已停机', 'UserToken失效', '未知的异常',
+                'LOS亮红灯', '部分直播黑屏', '全部直播黑屏', '黑白屏', '点播视频播放不完整或回跳']
 
 
 from collections import Counter
@@ -192,11 +199,21 @@ def analysis_intent(seq, seg_list):
     timed_task_intent = ['AT']
 
     # 舆情 1.更新舆情 2.获取网易排行 3.获取微博排行
-    toprank_intent = ['更新排行榜', '网易新闻排行', '微博热搜排行']
+    toprank_intent = ['更新排行榜', '网易新闻排行', '微博热搜排行','天气预警']
+
+    # 家客错误:
+    jiake_intent = ['错误代码','账户已停机','UserToken失效',
+                    '未知的异常','LOS亮红灯','部分直播黑屏','全部直播黑屏',
+                    '黑白屏','点播视频播放不完整或回跳']
 
 
     intent = 'other_domain'
-    if seq in toprank_intent:
+    # for k in jiake_intent:
+    #     if k in seq:
+    #         intent = 'knowladge_domin'
+    if intent != 'other_domain':
+        pass
+    elif seq in toprank_intent:
         intent = 'toprank_domain'
     else:
         for w in seg_list:
@@ -205,8 +222,14 @@ def analysis_intent(seq, seg_list):
             # key value存取redis
             if w in kv_os_intent:
                 intent = 'redis_domain'
+
+            # 定时任务
             elif w in timed_task_intent:
                 intent = 'timed_domain'
+
+            # 家客知识库
+            elif w in jiake_intent:
+                intent = 'knowladge_domin'
             # elif w in time_words:
             #     intent = 'time_domain'
     print(intent)
@@ -237,7 +260,12 @@ def cut_seq(seq):
         for Syn in Syn_list:
             if word in Syn:
                 word = Syn[0]
-                flag = 'city'
+                if word in city_list:
+                    flag = 'city'
+                elif word in jiake_ecodes:
+                    flag = 'jiake'
+                else:
+                    flag = 'undefine'
                 print(word, Syn)
         pos_list.append([word,flag])
     print(seg_list, pos_list)
@@ -346,15 +374,44 @@ def go_to_spider(seq):
     update_toprank_intent = ['更新排行榜']
     get_neteaserank_intent = ['网易新闻排行']
     get_sinarank_intent = ['微博热搜排行']
+    get_alarm_intent = ['天气预警']
     if seq in update_toprank_intent:
         result = spider.update_data()
     elif seq in get_neteaserank_intent:
         result = spider.read_netease_file()
     elif seq in get_sinarank_intent:
         result = spider.read_sina_file()
+    elif seq in get_alarm_intent:
+        result = spider.read_alarm(city_list)
     else:
         result = "获取排行榜失败！"
     return result
+
+def go_to_knowladge(seq, seg_list):
+    print("---go_to_knowladge---")
+
+    error_list = jiake_sheet.col_values(0)
+    solution_list = jiake_sheet.col_values(1)
+    print(error_list)
+    print(solution_list)
+    result = []
+
+    for w in seg_list:
+        if w in jiake_ecodes:
+            for i in range(len(error_list)):
+                if error_list[i] == w:
+                    result.append(solution_list[i])
+    # print(result)
+    if result == []:
+        result = '家客知识库中没有答案！'
+    else:
+        result = result[0]
+    return result
+
+
+
+
+
 
 # views.py调用函数
 def re_to_api(nature_seq):
@@ -374,6 +431,9 @@ def re_to_api(nature_seq):
     elif intent == 'toprank_domain':
         code = 1
         result = go_to_spider(seq)
+    elif intent == 'knowladge_domin':
+        code = 1
+        result = go_to_knowladge(seq,seg_list)
     else:
         result = search_xls_file(key_dict)
         if result == '':
