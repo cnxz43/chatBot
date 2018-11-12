@@ -446,7 +446,7 @@ def re_to_api(nature_seq):
     else:
         code = 0
 
-    result_dict = {'code':code, 'content':result, 'sentence':nature_seq}
+    result_dict = {'code':code, 'content':str(result), 'sentence':nature_seq}
     return result_dict
 
 

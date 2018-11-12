@@ -19,7 +19,7 @@ def StringListSave(filename, slist):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     path = save_path +filename+".txt"
-    with open(path, "w+") as fp:
+    with open(path, "w+",encoding="utf-8") as fp:
         for s in slist:
             # print("s",s)
             # fp.write("%s\t\t%s\n" % (s[0], s[1]))
@@ -82,7 +82,7 @@ def read_netease_file():
     '''
     file = save_path + "1_全站.txt"  #文件夹目录
     top_list = []
-    with open(file) as f:
+    with open(file,encoding="utf-8") as f:
         for line in f.readlines():
             # print(line.strip())
             top_list.append(line.strip())
@@ -92,7 +92,7 @@ def read_sina_file():
     print("---read_sina_file---")
     file = save_path + "0_热搜排行榜.txt"
     top_list = []
-    with open(file) as f:
+    with open(file,encoding="utf-8") as f:
         for line in f.readlines():
             # print(line.strip())
             top_list.append(line.strip())

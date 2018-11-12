@@ -29,7 +29,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from presses import spider,cennect_redis
 sched = BackgroundScheduler()
 
-@sched.scheduled_job(trigger='interval', seconds=3600)
+@sched.scheduled_job(trigger='interval', seconds=60)
 def my_task():
     print(spider.update_data())
     print(cennect_redis.publish_alarm())
