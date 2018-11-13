@@ -9,7 +9,7 @@ def save_to_redis(kv_dict):
         r = redis.StrictRedis(host='localhost', port=6379,db=0)
         for key, value in kv_dict.items():
             print(key,value)
-            r.set('昨天天气','多云')
+            # r.set('昨天天气','多云')
             r.set(key, value)   #添加
         return "储存成功！"
     except:
@@ -33,9 +33,11 @@ def publish_timed_task(now, time_span, value):
             conn = redis.StrictRedis()
             key = str(now)
             key_expire = str(now) + '_e'
-            conn.set(key, value)
-            conn.set(key_expire, 'expire')
-            conn.expire(key_expire,time_span)
+
+            # 同时存入两条
+            conn.set(key, value)  # 任务内容
+            conn.set(key_expire, 'expire')  # 过期内容
+            conn.expire(key_expire,time_span) #
             # conn.get(key)
             return "设定定时任务成功！"
         else:
