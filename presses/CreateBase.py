@@ -78,7 +78,7 @@ def people_graph_init(file_dir, pp_graph):
         new_node = Node("people",
                         id=row[0],
                         name=row[1],
-                        ph = row[2],
+                        ph = row[3],
                         addr = "石家庄市裕华区昆仑大街89号",
                         email = name_pinyin + "@he.chinamobile.com")
         pp_graph.create(new_node)
