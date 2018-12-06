@@ -12,7 +12,7 @@ import json
 import string
 import sys
 import re
-from presses import cennect_redis, spider
+from presses import cennect_redis, spider, CreateBase
 
 project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 print(project_dir)
@@ -25,6 +25,7 @@ jieba.load_userdict(project_dir + "/static/city_dict")
 jieba.load_userdict(project_dir + "/static/bussiness_dict")
 jieba.load_userdict(project_dir + "/static/fault_dict")
 jieba.load_userdict(project_dir + "/static/uncut_dict")
+jieba.load_userdict(project_dir + "/static/userdict.txt")
 # 添加建议词
 # jieba.suggest_freq(('今天','天气'), True)
 
@@ -187,7 +188,7 @@ def get_intent(seq):
             key_dict['fau'].append(pos[0])
         key_dict['pos'].append(pos[1])
     print(intent)
-    return intent, seg_list, key_dict
+    return intent, seg_list, key_dict, pos_list
 
 def analysis_intent(seq, seg_list):
     print("---analysis_intent---")
@@ -213,6 +214,9 @@ def analysis_intent(seq, seg_list):
                     '未知的异常','LOS亮红灯','部分直播黑屏','全部直播黑屏',
                     '黑白屏','点播视频播放不完整或回跳']
 
+    # 人员知识图谱
+    knowledge_graph = ['FIND']
+
 
     intent = 'other_domain'
     # for k in jiake_intent:
@@ -236,9 +240,10 @@ def analysis_intent(seq, seg_list):
 
             # 家客知识库
             elif w in jiake_intent:
-                intent = 'knowladge_domin'
-            # elif w in time_words:
-            #     intent = 'time_domain'
+                intent = 'jiake_domin'
+            # 知识图谱
+            elif w in knowledge_graph:
+                intent = 'kg_domain'
     print(intent)
     return intent
 
@@ -416,7 +421,108 @@ def go_to_knowladge(seq, seg_list):
     return result
 
 
+from py2neo import Node, NodeMatcher, RelationshipMatcher, walk
+def go_to_neo4j(pos_list):
+    print("---go_to_neo4j---")
 
+    # print(seq,seg_list,key_dict)
+    '''
+    知识图谱包含类型：
+    apartment：name
+    room：name
+    people：id name ph addr email
+    电话号码 phx
+    邮箱 emailx
+    地址 addrx
+    科室 roomx
+    员工 peoplex
+    部门 apartmentx
+    信息 informationx
+    查询图谱 kgx
+
+    matcher = RelationshipMatcher(graph) 
+    result = matcher.match({node1},'know')
+ 
+    '''
+    people_name = ''
+    room_name = ''
+    # apmt_name = ''
+    result_from = ''
+    result_type = ['phx','emailx','addrx','informationx','roomx','peoplex','apartmentx']
+    for pair in pos_list:
+        if pair[1] == 'name':
+            people_name = pair[0]
+        elif pair[1] == 'room':
+            room_name = pair[0]
+        # elif pair[1] == 'apartment':
+        #     apmt_name = pair[0]
+        elif pair[1] in result_type:
+            result_from = pair[1]
+    print("people_name",people_name)
+    print("room_name",room_name)
+    print("result_from",result_from)
+    result = []
+    try:
+        pp_graph = CreateBase.connect_graph()
+        matcher = NodeMatcher(pp_graph)
+        people_node = matcher.match('people', name= people_name)
+
+        room_node = matcher.match('room', name= room_name)
+        # print('node:',list(people_node),'\n',list(room_node))
+        # apartment_node = matcher.match('apartment', name= apmt_name)
+        if result_from in ['phx','emailx','addrx','informationx']:
+            print('### people info ###')
+            for node in people_node:
+                if result_from == 'phx':
+                    result.append(node['name']+'：'+node['ph'])
+                elif result_from == 'emailx':
+                    result.append(node['name']+'：'+node['email'])
+                elif result_from == 'addrx':
+                    result.append(node['name']+'：'+node['addr'])
+                elif result_from == 'informationx':
+                    result.append(node['name']+'：'+node['ph']+' '+node['email']+' '+node['addr'])
+                print(result)
+        elif result_from == 'peoplex':
+            print('### people name ###')
+            # 通过科室返回人名
+            # for rel in pp_graph.match(start_node=room_node, r_type="have"):
+            #     print(rel.end_node["name"])
+            for node in room_node:
+                matcher = RelationshipMatcher(pp_graph)
+                match_res = matcher.match({node}, 'have')
+                for x in match_res:
+                    y = walk(x)
+                    next(y)
+                    next(y)
+                    end_node = next(y)['name']
+                    # print(end_node)
+                    if end_node != room_name:
+                        result.append(end_node)
+
+                    # print(next(y)['name'])
+        elif result_from == 'roomx':
+            print('### room name ###')
+            # 通过人名返回科室
+            print('aaa')
+            for node in people_node:
+                matcher = RelationshipMatcher(pp_graph)
+                match_res = matcher.match({node}, 'belong')
+                for x in match_res:
+                    y = walk(x)
+                    # y.__next__()
+                    next(y)
+                    next(y)
+                    end_node = (next(y)['name'])
+                    result.append(end_node)
+        result_ = ''
+        for sent in result:
+            result_ += sent + ' '
+
+
+    except:
+        result_ = '查询知识图谱失败'
+    print("kg",result_)
+    return result_
 
 
 
@@ -428,7 +534,7 @@ def re_to_api(nature_seq):
     code = 0
 
     # 判断意图及分词
-    intent, seg_list, key_dict = get_intent(seq)
+    intent, seg_list, key_dict, pos_list = get_intent(seq)
     print("intent, key_dict",intent, key_dict)
 
     if intent == "redis_domain":
@@ -444,6 +550,9 @@ def re_to_api(nature_seq):
     elif intent == 'knowladge_domin':
         code = 1
         result = go_to_knowladge(seq,seg_list)
+    elif intent == "kg_domain":
+        code = 1
+        result = go_to_neo4j(pos_list)
     else:
         result = search_xls_file(key_dict)
         if result == '':
