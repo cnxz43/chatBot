@@ -199,7 +199,14 @@ def analysis_intent(seq, seg_list):
     timed_task_intent = ['AT']
 
     # 舆情 1.更新舆情 2.获取网易排行 3.获取微博排行
-    toprank_intent = ['更新排行榜', '网易新闻排行', '微博热搜排行','天气预警']
+    toprank_intent = ['更新排行榜', '网易新闻排行','网易新闻', '微博热搜排行','微博热搜排行榜','新浪热搜排行','天气预警','灾害预警']
+
+    '''
+    update_toprank_intent = ['更新排行榜']
+    get_neteaserank_intent = ['网易新闻排行','网易新闻']
+    get_sinarank_intent = ['微博热搜排行','微博热搜排行榜','新浪热搜排行']
+    get_alarm_intent = ['天气预警','灾害预警']
+    '''
 
     # 家客错误:
     jiake_intent = ['错误代码','账户已停机','UserToken失效',
@@ -296,7 +303,7 @@ def save_redis(seq):
     print(pattern.findall(seq))
     print(pattern.search(seq))
     for kv_item in pattern.findall(seq):
-        # print(kv_item.split('：', 1))
+        print(kv_item.split('：', 1))
         temp_item = kv_item.replace("：",":")
         temp_key = temp_item.split(':', 1)[0]
         kv_dict[temp_key] = kv_item[len(temp_key)+1:]#kv_item.split(':', 1)[1]
@@ -372,9 +379,9 @@ def go_to_timedtask(seq, seg_list):
 def go_to_spider(seq):
     print("---go_to_spider---")
     update_toprank_intent = ['更新排行榜']
-    get_neteaserank_intent = ['网易新闻排行']
-    get_sinarank_intent = ['微博热搜排行']
-    get_alarm_intent = ['天气预警']
+    get_neteaserank_intent = ['网易新闻排行','网易新闻']
+    get_sinarank_intent = ['微博热搜排行','微博热搜排行榜','新浪热搜排行']
+    get_alarm_intent = ['天气预警','灾害预警']
     if seq in update_toprank_intent:
         result = spider.update_data()
     elif seq in get_neteaserank_intent:

@@ -117,6 +117,7 @@ def update_data():
 
 
 def read_alarm(city_list):
+    print("---read_alarm---")
     result = []
     for city in city_list :
         if city and city != '雄安新区':
@@ -166,7 +167,10 @@ if __name__ == '__main__':
     # update_data()
 
     # 读取排行
-    read_netease_file()
-    read_sina_file()
+    # read_netease_file()
+    # read_sina_file()
+
+    # print(weather_alarm('石家庄'))
+    print(read_alarm())
     print ("end")
 
