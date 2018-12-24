@@ -217,7 +217,6 @@ def analysis_intent(seq, seg_list):
     # 人员知识图谱
     knowledge_graph = ['FIND']
 
-
     intent = 'other_domain'
     # for k in jiake_intent:
     #     if k in seq:
