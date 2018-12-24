@@ -49,10 +49,12 @@ with open(file_dir,encoding='utf-8') as f1:
 
 get_name_api_word_list = ["起名", "网名", "想个名字", "起个名字"]
 city_list = ['沧州市', '石家庄市', '保定市', '唐山市', '秦皇岛市', '邯郸市', '衡水市', '张家口市', '雄安新区', '廊坊市', '承德市', '邢台市']
-jiake_ecodes = ['KT001', 'KT003', 'KT005', 'KT006', '10000', '10001', '10010',
-                '1305', '40002', '1302', 'KT007', 'KT011', 'KT016',
-                '账户已停机', 'UserToken失效', '未知的异常',
-                'LOS亮红灯', '部分直播黑屏', '全部直播黑屏', '黑白屏', '点播视频播放不完整或回跳']
+jiake_ecodes = ['错误代码','错误提示','账户已停机','UserToken失效',
+                    '未知的异常','LOS亮红灯','部分直播黑屏','全部直播黑屏',
+                    '黑白屏','点播视频播放不完整或回跳','用户账号不存在','用户绑定MAC与登录MAC不匹配',
+                    '自动获取业务账号中','UserToken过期',
+                    '未知的异常','订购失败','检测账号中','网管服务器数据下发超时','机顶盒恢复出厂的方法',
+                    '查看机顶盒获得IP地址的方法']
 
 
 from collections import Counter
@@ -210,9 +212,7 @@ def analysis_intent(seq, seg_list):
     '''
 
     # 家客错误:
-    jiake_intent = ['错误代码','账户已停机','UserToken失效',
-                    '未知的异常','LOS亮红灯','部分直播黑屏','全部直播黑屏',
-                    '黑白屏','点播视频播放不完整或回跳']
+    jiake_intent = jiake_ecodes
 
     # 人员知识图谱
     knowledge_graph = ['FIND']
@@ -409,10 +409,13 @@ def go_to_knowladge(seq, seg_list):
     result = []
 
     for w in seg_list:
-        if w in jiake_ecodes:
-            for i in range(len(error_list)):
-                if error_list[i] == w:
-                    result.append(solution_list[i])
+        for i in range(len(error_list)):
+            if error_list[i] == w:
+                result.append(solution_list[i])
+    if result == []:
+        for i in range(len(error_list)):
+            if error_list[i] == seq:
+                result.append(solution_list[i])
     # print(result)
     if result == []:
         result = '家客知识库中没有答案！'
@@ -547,7 +550,7 @@ def re_to_api(nature_seq):
     elif intent == 'toprank_domain':
         code = 1
         result = go_to_spider(seq)
-    elif intent == 'knowladge_domin':
+    elif intent == 'jiake_domin':
         code = 1
         result = go_to_knowladge(seq,seg_list)
     elif intent == "kg_domain":
