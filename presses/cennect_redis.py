@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 import redis
-from presses import spider, nlp_presses
+from presses import nlp_presses
 
 
 def save_to_redis(kv_dict):
@@ -28,9 +28,11 @@ def get_from_redis(key):
     return value
 
 def publish_timed_task(now, time_span, value):
+    print("---publish_timed_task---")
+    print(now, time_span, value)
     try:
         if time_span >= 0:
-            conn = redis.StrictRedis()
+            conn = redis.StrictRedis(host='localhost', port=6379, db=0)
             key = str(now)
             key_expire = str(now) + '_e'
 
@@ -45,14 +47,7 @@ def publish_timed_task(now, time_span, value):
     except:
         return "发布定时任务失败!"
 
-def publish_alarm():
-    message = spider.read_alarm(nlp_presses.city_list)
-    # message = str(alarm_list)
 
-    conn = redis.StrictRedis()
-    # conn = redis.StrictRedis()
-    conn.publish('mychannel',message)
-    return ('发布天气预警！')
 
 if __name__=="__main__":
     kv_dict = {'今天天气':'晴'}
